@@ -20297,7 +20297,7 @@ window.H11=(()=>{
    beam(0,wallTop,W,3);for(let f=1;f<fl;f++)beam(0,base-4-f*fH-1,W,3);beam(0,wallTop,3,wallH-4);beam(W-3,wallTop,3,wallH-4);
    if(fl>=2){for(let f=1;f<fl;f++){const y0=base-4-(f+1)*fH+2,y1=base-4-f*fH-1;for(const bx of [16,W-19])for(let t=0;t<=y1-y0;t++){const x=bx+Math.round(t*.55);s.p(X(x),Y(y0+t),TIMBER[2]);s.p(X(x+1),Y(y0+t),TIMBER[3])}}}}
   else if(sp.wall==='wood'||sp.wall==='bamboo'){for(let y=wallTop;y<base-4;y++){for(const x of [0,1,W-2,W-1])s.p(X(x),Y(y),K6(TIMBER,x===0?3.6:x===W-1?1.2:2.6))}if(fl>=2)for(let f=1;f<fl;f++)for(let x=0;x<W;x++){s.p(X(x),Y(base-4-f*fH),TIMBER[3]);s.p(X(x),Y(base-4-f*fH+1),TIMBER[1])}}
-  else{for(let y=wallTop;y<base-4;y++){const r=Math.floor((y-wallTop)/7)%2;for(let x=0;x<(r?6:9);x++)s.p(X(x),Y(y),K6(WR,((y-wallTop)%7===6)?1:x===0?4.4:3.8));for(let x=W-(r?9:6);x<W;x++)s.p(X(x),Y(y),K6(WR,((y-wallTop)%7===6)?1:x===W-1?1.6:2.4))}}
+  else if(!sp.folk||sp.wall==='rough'||sp.wall==='dark'){for(let y=wallTop;y<base-4;y++){const r=Math.floor((y-wallTop)/7)%2;for(let x=0;x<(r?6:9);x++)s.p(X(x),Y(y),K6(WR,((y-wallTop)%7===6)?1:x===0?4.4:3.8));for(let x=W-(r?9:6);x<W;x++)s.p(X(x),Y(y),K6(WR,((y-wallTop)%7===6)?1:x===W-1?1.6:2.4))}}
   // Fenster je Stockwerk
   const dcx=2*32+16,ww=sp.winW||10,wh=sp.winH||(fl>=2?12:13);const cols=[];const n=Math.max(1,Math.floor((W-12)/26));for(let i=0;i<n;i++)cols.push(Math.round(8+(i+.5)*(W-16)/n-ww/2));
   for(let f=0;f<fl;f++){const wy=base-4-f*fH-Math.round(fH*.5)-Math.round(wh/2)-(f===0?2:0);for(const cx of cols){if(f===0&&Math.abs(cx+ww/2-dcx)<ww/2+12)continue;if(sp.noWin&&sp.noWin(f,cx))continue;
@@ -20400,9 +20400,9 @@ window.H11=(()=>{
  function lantern(s,x,y){const I=Z.IRON;for(let i=0;i<4;i++)s.p(x+i,y,I[2]);s.p(x+3,y+1,I[3]);for(let j=0;j<6;j++)for(let i=0;i<5;i++){const e=i===0||i===4||j===0||j===5;s.p(x+1+i,y+2+j,e?I[2]:UC(j<3?'#fff0b0':'#ffc860'))}}
  // ---- Cache & Zeichnen ----
  const BC=new Map();let budget=0,bF=-1;
- function key(b){const sn=PXWX==='schnee'?1:0;return b.t+'|'+b.x+'|'+b.y+'|'+b.w+'|'+b.h+'|'+Z.K()+'|'+sn+'|'+(b.t==='shop'?b.n:'')+'|'+(b.hs?b.hs.seed:'')+'|'+(b.t!=='house'?(()=>{try{const L=TLOOK||(TLOOK=shopLook());return L.tier+L.acc}catch(e){return 0}})():'')}
+ function key(b){const sn=PXWX==='schnee'?1:0;return b.t+'|'+b.x+'|'+b.y+'|'+b.w+'|'+b.h+'|'+Z.K()+'|'+sn+'|'+(b.t==='shop'?b.n:'')+'|'+(b.hs?b.hs.seed:'')+'|'+(b.t!=='house'?(()=>{try{const L=TLOOK||(TLOOK=shopLook());return L.tier+L.acc+L.sk+(Z.vshopOff?'o':'')}catch(e){return 0}})():'')}
  function spriteFor(b,force){const k=key(b);let o=BC.get(k);if(o)return o;const fr=Z.fr();if(bF!==fr){bF=fr;budget=0}if(!force&&budget>8)return null;const t0=performance.now();let sp=null;
-  try{if(b.t==='house'){if(!b.hs||b.hs.sty!=='human')return(BC.set(k,false),false);sp=houseSpec(b)}else{const LK=TLOOK||(TLOOK=shopLook());if(LK.sk!=='human')return(BC.set(k,false),false);sp=(Z.shopSpec2||shopSpec)(b,LK)}}catch(e){console.log('h11 spec',e&&e.message);sp=null}
+  try{if(b.t==='house'){if(!b.hs||b.hs.sty!=='human')return(BC.set(k,false),false);sp=houseSpec(b)}else{const LK=TLOOK||(TLOOK=shopLook());const folk=LK.sk!=='human';if(folk&&(!Z.folkShopMod||Z.vshopOff))return(BC.set(k,false),false);sp=(Z.shopSpec2||shopSpec)(b,LK);if(folk&&sp)sp=Z.folkShopMod(sp,b,LK)}}catch(e){console.log('h11 spec',e&&e.message);sp=null}
   if(!sp){BC.set(k,false);return false}o=paint(sp);o.sp=sp;o.noFlag=!!sp.noFlag;BC.set(k,o);const ms=performance.now()-t0;budget+=ms;Z.st.spr++;Z.st.sprMs+=ms;return o}
  const _db=window.drawBuilding;window.drawBuilding=function(b,sx,sy){if(!Z.act()||!b)return _db.apply(this,arguments);let o=null;try{o=spriteFor(b)}catch(e){console.log('h11 bld',e&&e.message);o=false}
   if(!o)return _db.apply(this,arguments);// Fallback: bisherige Darstellung (andere Völker, höhere Stufen) oder noch nicht gebacken
@@ -20420,7 +20420,7 @@ window.H11=(()=>{
    if(b.t==='dojo'&&PL.style<0){g.fillStyle='#ffd24a';g.font='bold 12px sans-serif';g.fillText('!',sx+w/2,sy-18+Math.sin(performance.now()/200)*2)}g.restore()}};
  // Vorwärmen aller Stadtgebäude in Leerlaufzeit
  setInterval(()=>{try{if(!Z.act()||!inTown)return;let n=0;for(const b of TOWN){if(!BC.has(key(b))){spriteFor(b,true);if(++n>=2)break}}}catch(e){}},90);
- Z.BH={icon,lantern,win,door,props,K6,GOLD,GLASS,STONE0,TIMBER,W2,SNW,regional,flagSpr,ICON};Z.paint=paint;Z.houseSpec=houseSpec;Z.shopSpec=shopSpec;Z.bldSprite=spriteFor;Z.clearBld=()=>BC.clear()})();
+ Z.BH={icon,lantern,win,door,props,K6,GOLD,GLASS,STONE0,TIMBER,W2,SNW,regional,flagSpr,ICON};Z.paint=paint;Z.WALL=WALL;Z.ROOF=ROOF;Z.houseSpec=houseSpec;Z.shopSpec=shopSpec;Z.bldSprite=spriteFor;Z.clearBld=()=>BC.clear()})();
 // ---------- dev211c: Läden mit ihren typischen Merkmalen (wie im alten Bild), in HD-2D-Pixelqualität ----------
 // Taverne = Saloon mit Scheinfassade/Vordach/Schwingtüren · Hafen = weiß-blau gestreift, Bootsdach, Bullaugen, Anker, Rettungsring, rot-weißer Leuchtturm
 // Gasthaus = Fachwerk, rotes Steildach mit Gauben, Mittelbalkon, Bett-Schild, Bank · Laden = große Schaufenster, Markise, Dachschild, Stände
@@ -21607,7 +21607,7 @@ window.H11=(()=>{
  function mmap(M){const wx=M.key.replace('N',''),hz=P3(M.haze);return c=>{let q=c;if(wx==='sturm'){const l=(q[0]+q[1]+q[2])/3;q=[q[0]*.56+6,q[1]*.6+9,q[2]*.66+14].map(v=>v*.82+l*.58*.18)}else if(wx==='nebel'){q=mx3(q,hz,.24)}
   if(M.night)q=[q[0]*.25+12,q[1]*.29+17,q[2]*.38+33];return q}}
  // ---------- Ein Bild rastern ----------
- function bake(D,G,M,k){const W=G.W,H=G.H,ox=G.ox,oy=G.oy,wl=oy,L=G.L;const s=new Z.Spr(W,H),d=s.d,tag=new Uint8Array(W*H),em=new Uint8Array(W*H);
+ function bake(D,G,M,k){const W=G.W,H=G.H,ox=G.ox,oy=G.oy,wl=oy,L=G.L,LS=G.lmir?-1:1;/* dev218: LS=-1 = Licht von rechts, für gespiegelte Darstellung mit Licht von links */const s=new Z.Spr(W,H),d=s.d,tag=new Uint8Array(W*H),em=new Uint8Array(W*H);
   const storm=M.key.startsWith('sturm'),fog=M.key.startsWith('nebel'),night=!!M.night;
   const ph=k/SNF*TAU,a=M.amp*Math.sin(ph),bob=Math.round(M.bob*Math.sin(ph+1.1)),ca=Math.cos(a),sa=Math.sin(a);
   const bil=(storm?6.5:fog?3:4.2)*(1+.14*Math.sin(2*ph));const splash=Math.max(0,Math.sin(ph-.35));
@@ -21639,7 +21639,7 @@ window.H11=(()=>{
    for(let i=0;i<=n;i++){const q=i/n,u=cx0-hw*1.07+sh*.2+(2*hw*1.07)*q,yy=yb-bil*.55*Math.sin(Math.PI*q)-(G.ragged?hh(i,tier,3)*5:0);P.push([u,yy])}
    for(let i=n;i>=0;i--){const t=i/n;P.push([cx0+hw*(1+.07*t)+sh*Math.sin(Math.PI*t)*.75+sh*.2*t,yt+(yb-yt)*t])}
    const reefs=G.reef?[.14,.26,.38]:tier<2?[.12,.22]:[.15];
-   sail(P,(u,v,X,Y)=>{const t=(v-yt)/(yb-yt),c=cx0+sh*.2*t+sh*Math.sin(Math.PI*t)*.5,hw2=hw*(1+.07*t)+sh*.25*Math.sin(Math.PI*t),s=(u-c)/hw2;
+   sail(P,(u,v,X,Y)=>{const t=(v-yt)/(yb-yt),c=cx0+sh*.2*t+sh*Math.sin(Math.PI*t)*.5,hw2=hw*(1+.07*t)+sh*.25*Math.sin(Math.PI*t),s=(u-c)/hw2*LS;
     let l=.5-.36*s+.22*Math.sin(Math.PI*cl(t,0,1))-(t<.07?.26:0)-(t>.9?.14:0)-.1*s*s-(s>.78?.12:0)+(s<-.8?.08:0);
     const cr=Math.abs((u-c)-s*0)+0;if(Math.abs((v-yt)-(Math.abs(u-c)-hw2*.15)*.9)<.6&&t<.45)l-=.12;// Spannfalten von den Nocken
     const seam=((Math.round(u-c+40))%5===0)&&t>.06;const rb=reefs.some(r=>Math.abs(t-r)<.5/(yb-yt)+.004);
@@ -21652,19 +21652,19 @@ window.H11=(()=>{
    const ux=mastX(m,(yb+yg)/2)-1.5,P=[[ux,yb],[ux,yg],[ux-gl,yg-gl*.5]];const n=7;for(let i=1;i<=n;i++){const t=i/n;P.push([ux-gl+(gl-bl)*t-bil*.9*Math.sin(Math.PI*t),yg-gl*.5+(yb+2-(yg-gl*.5))*t])}
    P.push([ux-bl*.5,yb+1.2+bil*.1]);
    sail(P,(u,v,X,Y)=>{const tv=cl((v-(yg-gl*.5))/(yb-(yg-gl*.5)),0,1),chord=bl*(.6+.4*tv),s=cl((ux-u)/chord,0,1);let l=.34+.34*Math.sin(Math.PI*s*.95)+.16*s-.14*(1-tv)+.08*tv-(tv>.92?.16:0)-(s<.06?.12:0);const seam=(Math.round(ux-u)%6===0);
-    const rb=Math.abs(v-(yb-5))<.6||Math.abs(v-(yb-9))<.6;if(rb){if((Math.round(u)&3)===0)return RI(SR,1);l-=.14}return clothCol(cl(l,0,1),s*2-1,X,Y,seam,u,v)});
+    const rb=Math.abs(v-(yb-5))<.6||Math.abs(v-(yb-9))<.6;if(rb){if((Math.round(u)&3)===0)return RI(SR,1);l-=.14}return clothCol(cl(l,0,1),(s*2-1)*LS,X,Y,seam,u,v)});
    // Gaffel & Baum
    line(ux,yg,ux-gl,yg-gl*.5,SP[2],2);line(ux,yg+1,ux-gl,yg-gl*.5+1,SP[1],2);line(ux,yb+1,ux-bl,yb+2,SP[3],2);line(ux,yb+2,ux-bl,yb+3,SP[1],2);
    if(m.top){// Gaffeltoppsegel
     const P2=[[ux,yg-2],[ux,top+6],[ux-gl*.95,yg-gl*.5-1]];sail(P2,(u,v,X,Y)=>clothCol(.62+.1*((ux-u)/gl),.2,X,Y,Math.round(ux-u)%6===0,u,v))}}
   function latSail(m,y0,h){const ell=h*.95,F=[mastX(m,y0)+ell*.42,y0-h*.16],A=[mastX(m,y0)-ell*.5,y0-h*1.02],C=[mastX(m,y0)-ell*.36,y0-h*.1];
    const P=[F,A];const n=7;for(let i=1;i<=n;i++){const t=i/n;P.push([A[0]+(C[0]-A[0])*t-bil*.8*Math.sin(Math.PI*t),A[1]+(C[1]-A[1])*t])}for(let i=1;i<n;i++){const t=i/n;P.push([C[0]+(F[0]-C[0])*t,C[1]+(F[1]-C[1])*t-bil*.7*Math.sin(Math.PI*t)])}
-   sail(P,(u,v,X,Y)=>{const s=cl((F[0]-u)/(F[0]-A[0]),0,1);let l=.36+.36*Math.sin(Math.PI*s)+.12*s;const seam=((Math.round(u*.8+v*.6))%6===0);return clothCol(cl(l,0,1),.6-s,X,Y,seam,u,v)});
+   sail(P,(u,v,X,Y)=>{const s=cl((F[0]-u)/(F[0]-A[0]),0,1);let l=.36+.36*Math.sin(Math.PI*s)+.12*s;const seam=((Math.round(u*.8+v*.6))%6===0);return clothCol(cl(l,0,1),(.6-s)*LS,X,Y,seam,u,v)});
    line(F[0]+3,F[1]+1.5,A[0]-2,A[1]-1,SP[3],2);line(F[0]+3,F[1]+2.5,A[0]-2,A[1],SP[1],2)}
   function mast(m){const {y0,h,top}=MR(m);TG=2;area(m.u-8,top-1,m.u+8,y0+2,(u,v)=>{const cx=mastX(m,v),tt=cl((y0-v)/h,0,1),hw=2.7-tt*1.4,du=u-cx;if(Math.abs(du)>hw)return 0;
-    let i=du<-hw+1?4.6:du>hw-1?1.2:2.8;if(((Math.round(y0-v))%16)===0)i=.6;else if(((Math.round(y0-v))%16)===1)i=4.4;return RI(SP,i)});TG=1;return {y0,h,top}}
+    let i=du*LS<-hw+1?4.6:du*LS>hw-1?1.2:2.8;if(((Math.round(y0-v))%16)===0)i=.6;else if(((Math.round(y0-v))%16)===1)i=4.4;return RI(SP,i)});TG=1;return {y0,h,top}}
   function nest(m,top){const ny=top+11,cx=mastX(m,ny);TG=2;area(cx-7,ny-5,cx+7,ny+5,(u,v)=>{const du=u-cx,dv=v-ny;const w=5.6+dv*.3;if(Math.abs(du)>w||dv<-4.5||dv>4.6)return 0;
-    if(dv<-3.5)return du<0?WR[9]:WR[7];let i=4.4+(-du/w)*2.6;if(Math.round(dv)===-1||Math.round(dv)===2)i-=2;if(dv>3.5)i-=1.4;return RI(WR,i)});TG=1}
+    if(dv<-3.5)return du*LS<0?WR[9]:WR[7];let i=4.4+(-du*LS/w)*2.6;if(Math.round(dv)===-1||Math.round(dv)===2)i-=2;if(dv>3.5)i-=1.4;return RI(WR,i)});TG=1}
   function top_(m,y){const cx=mastX(m,y);TG=2;area(cx-7,y-1.5,cx+7,y+.5,(u,v)=>v<y-.6?WR[7]:WR[3]);TG=1}
   // ---- Takelage & Segel je Mast ----
   const tierF=[[.07,.38],[.41,.62],[.64,.79],[.81,.91]],tierW=[1,.84,.68,.54];
@@ -21698,11 +21698,11 @@ window.H11=(()=>{
    // Galerie
    if(D.stern==='galerie'&&u<G.sternX(v)+3&&dd<9){if(dd<1)return GOLD[3];if(dd<2)return GOLD[1];return (Math.round(v)&1)?GOLD[2]:(night?(E=1,[255,200,110]):[40,30,24])}
    // Kupfer / Wasserlinie
-   if(v>-2.4){const n=hh(Math.floor(u/3),Math.floor(v),11);if(v<-1.6)return CU[4];return n<.07?CU[5]:RI(CU,2.4+(u<0?.4:0)-(v>-.8?.9:0))}
+   if(v>-2.4){const n=hh(Math.floor(u/3),Math.floor(v),11);if(v<-1.6)return CU[4];return n<.07?CU[5]:RI(CU,2.4+(u*LS<0?.4:0)-(v>-.8?.9:0))}
    if(D.arm&&v>-10&&v<-4.5){const pu=((Math.round(u)%9)+9)%9;if(pu===0)return IR[0];if(v<-9.2)return IR[4];if((pu===2||pu===7)&&Math.round(v)===-7)return IR[4];return RI(IR,2.4+(u<0?.5:0)-(v>-6?1:0))}
    // Eisbrecher-Bug
    if(D.bow==='eis'&&u>G.L-18&&dd>dW+2){const pu=((Math.round(u)%6)+6)%6,pv=((Math.round(v)%5)+5)%5;if(pu===0||pv===0)return IR[1];return pu===1&&pv===1?IR[4]:IR[3]}
-   let lf=1-.46*Math.pow(cl(dd/G.Fb,0,1),1.25);if(u>G.L-14)lf-=(u-(G.L-14))/14*.28;if(u<G.sternX(v)+2)lf+=.24;
+   let lf=1-.46*Math.pow(cl(dd/G.Fb,0,1),1.25);if(LS>0){if(u>G.L-14)lf-=(u-(G.L-14))/14*.28;if(u<G.sternX(v)+2)lf+=.24}else{if(u>G.L-14)lf+=(u-(G.L-14))/14*.16;if(u<G.sternX(v)+4)lf-=.22}
    let i=1.6+lf*6.2;
    if(dd<1)return D.t===7||D.up>=3?GOLD[3]:RI(WR,9);if(dd<2)return D.t===7||D.up>=3?GOLD[1]:RI(WR,7);
    if(dd<3)return D.rr>=1&&RAR_[D.rr]?P3(RAR_[D.rr][1]):RI(WR,1);
@@ -21751,7 +21751,7 @@ window.H11=(()=>{
   if(!G.furl){const f=masts[masts.length-1],[tx,ty]=G.bsTip;for(let j=0;j<G.jib;j++){const hY=f.y0-f.h*(.78-j*.12),hu=mastX(f,hY)+1,T=[tx-j*9,ty+j*3+1],C=[hu+(T[0]-hu)*.34,G.deckY(G.L*.5)-5];
    const P=[[hu,hY]];const n=6;for(let i=1;i<=n;i++){const t=i/n;P.push([hu+(T[0]-hu)*t+bil*.5*Math.sin(Math.PI*t),hY+(T[1]-hY)*t])}for(let i=1;i<n;i++){const t=i/n;P.push([T[0]+(C[0]-T[0])*t,T[1]+(C[1]-T[1])*t-bil*.5*Math.sin(Math.PI*t)])}
    for(let i=1;i<n;i++){const t=i/n;P.push([C[0]+(hu-C[0])*t-bil*.6*Math.sin(Math.PI*t),C[1]+(hY-C[1])*t])}
-   sail(P,(u,v,X,Y)=>{const s=cl((u-hu)/(T[0]-hu),0,1);return clothCol(cl(.52+.3*Math.sin(Math.PI*s)-.1*s,0,1),.4-s*.6,X,Y,(Math.round(u*.7-v*.7)%6===0),u,v)});
+   sail(P,(u,v,X,Y)=>{const s=cl((u-hu)/(T[0]-hu),0,1);return clothCol(cl(.52+.3*Math.sin(Math.PI*s)-.1*s,0,1),(.4-s*.6)*LS,X,Y,(Math.round(u*.7-v*.7)%6===0),u,v)});
    {const o=new Uint32Array(d),OL=pk(P3(M.ol));const [a0,b0,a1,b1]=bb(P);const A=toC(a0,b1),B=toC(a1,b0);for(let Y=Math.max(1,Math.floor(Math.min(A[1],B[1]))-3);Y<Math.min(wl-1,Math.ceil(Math.max(A[1],B[1]))+3);Y++)for(let X=Math.max(1,Math.floor(Math.min(A[0],B[0]))-3);X<Math.min(W-1,Math.ceil(Math.max(A[0],B[0]))+3);X++){const i=Y*W+X;if(tag[i])continue;if(tag[i-1]===3||tag[i+1]===3||tag[i-W]===3||tag[i+W]===3)o[i]=OL}d.set(o)}
    line(hu,hY,T[0],T[1],rope,6)}}
   // Ruderbänke
@@ -22314,7 +22314,7 @@ window.H11=(()=>{
  function descE(E){const marine=E.k==='marine';return {t:E.t|0,cls:[0,0,1,1,2,2,1,3][E.t|0]||0,up:0,can:Math.min(9,E.ec|0),arm:0,rr:E.r|0,fig:E.r>=3?E.r:0,paint:marine?'#2b4a7a':null,
    sail:marine?'#e8eef8':E.t===6?'#bfe8d8':'#2c2c34',form:'aus',plank:E.t===6?'geist':'std',rig:'std',bow:null,stern:null,mods:[],mo:null,
    flag:marine?{bg:'#2b4a7a',bd:'#f2ead4',s:2,own:1}:{bg:'#16161c',bd:null,s:0},own:0,lv:0}}
- function kit(D,M){D=Object.assign({},D,{sc:+((NSC[D.t]||1)*.82/1.35*.82).toFixed(3)});const key=JSON.stringify(D)+M.key;let K=SC.get(key);if(!K){K={D,G:SS.geo(D),M,f:[]};SC.set(key,K);if(SC.size>12)SC.delete(SC.keys().next().value)}return K}
+ function kit(D,M,mir){D=Object.assign({},D,{sc:+((NSC[D.t]||1)*.82/1.35*.82).toFixed(3)});const key=JSON.stringify(D)+M.key+(mir&&!Z.navMirOld?'m':'');let K=SC.get(key);if(!K){const G=SS.geo(D);G.lmir=!!(mir&&!Z.navMirOld);K={D,G,M,f:[]};SC.set(key,K);if(SC.size>12)SC.delete(SC.keys().next().value)}return K}
  let built=0;
  function frame(K,time){const i=Math.floor(time/K.M.loop*SNF)%SNF;let F=K.f[i];if(!F&&built<1){const t0=performance.now();F=K.f[i]=SS.bake(K.D,K.G,K.M,i*(32/SNF));built++;Z.navStat.bake++;Z.navStat.ms+=performance.now()-t0}
   if(!F)for(let q=1;q<SNF&&!F;q++)F=K.f[(i-q+SNF)%SNF];return F}
@@ -22353,7 +22353,7 @@ window.H11=(()=>{
   const A=N.act&&now-N.act.t0<1600?N.act:null;
   // Rammstoß: kurzer Satz nach vorn (nur Darstellung)
   let lunge=0;if(A&&(A.k==='ram'||A.k==='anlauf'||A.k==='eisstoss')){const q=(now-A.t0)/900;if(q<1)lunge=Math.sin(Math.min(1,q)*Math.PI)*(ex-px-24)}
-  const KP=kit(SS.desc(me),M),KE=kit(descE(E),M);
+  const KP=kit(SS.desc(me),M),KE=kit(descE(E),M,1);
   const shipAt=(K,x,y,flip,sp,hp,burn,side)=>{const Fr=frame(K,time+(flip?1.3:0));if(!Fr)return;const sc=K.D.sc,wl=y+11*sc+1;g.save();g.translate(x,wl+sp*34);g.rotate((flip?-1:1)*sp*.5);g.globalAlpha=1-sp*.55;if(flip)g.scale(-1,1);
     g.drawImage(Fr,-Fr.ox/2,-Fr.oy/2,Fr.width/2,Fr.height/2);
     // Lecks und Feuer am Rumpf (Schaden nach Rumpf-Anteil)
@@ -22525,12 +22525,12 @@ window.H11=(()=>{
  const BY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(v=>(v+.5)/16),by=(x,y)=>BY[(y&3)*4+(x&3)];
  const use=()=>Z.act()&&!Z.dgRestOff&&typeof DG!=='undefined'&&DG&&DG.G;
  const nrm=c=>{const q=document.createElement('canvas').getContext('2d');q.fillStyle=c;return q.fillStyle};
- const C=new Map();const mk=(key,w,h,fn)=>{let c=C.get(key);if(c)return c;const s=new Spr(w,h);fn(s);Z.ink(s,.5);c=s.cv();C.set(key,c);return c};
- const STEEL=['#2a2a30','#4a4a54','#70707c','#9a9aa6','#c8c8d2','#f2f2f8'].map(c=>UC(c));
+ const C=new Map();const mk=(key,w,h,fn)=>{let c=C.get(key);if(c)return c;const s=new Spr(w,h);fn(s);Z.ink(s,key.startsWith('sp')?.82:.5);c=s.cv();C.set(key,c);return c};
+ const STEEL=(Z.dgSpikeOld?['#2a2a30','#4a4a54','#70707c','#9a9aa6','#c8c8d2','#f2f2f8']:['#5a5a66','#9a9aa8','#c4c4d0','#dcdce6','#f2f2f8','#ffffff']).map(c=>UC(c)),WARN=['#3a3a42','#5a5a64','#7a7a86','#8a8a96','#a8a8b4','#c4c4ce'].map(c=>UC(c));
  // Stacheln: 3×3 Spitzen auf einem 16er-Feld (32 Kunstpixel); h = Höhe (Warnung kurz, oben lang)
- const spikes=up=>mk('sp'+up,32,40,s=>{const H=up?11:4;for(let i=0;i<3;i++)for(let j=0;j<3;j++){const bx=5+i*10,by0=14+j*10;
-   for(let y=0;y<H;y++){const w=Math.max(0,Math.round((H-y)/H*2.2));for(let x=-w;x<=w;x++){let t=x<0?4.2:x===0?3.2:1.6;if(y>H-2)t+=.8;s.p(bx+x,by0-y,K6(STEEL,t))}}
-   s.p(bx,by0-H,STEEL[5]);for(let x=-2;x<=2;x++)s.p(bx+x,by0+1,U(10,8,10,140))}});
+ const spikes=up=>mk('sp'+up,32,40,s=>{const H=up?11:5,PAL=up?STEEL:WARN;for(let i=0;i<3;i++)for(let j=0;j<3;j++){const bx=5+i*10,by0=14+j*10;
+   for(let y=0;y<H;y++){const w=Math.max(0,Math.round((H-y)/H*3.2));for(let x=-w;x<=w;x++){let t=x<0?5:x===0?4.6:x<w?3.6:2.6;if(y<2)t-=.8;s.p(bx+x,by0-y,K6(PAL,t))}}
+   s.p(bx,by0-H,PAL[5]);s.p(bx-1,by0-H+2,PAL[5]);for(let x=-2;x<=2;x++)s.p(bx+x,by0+1,U(10,8,10,140))}});
  // Kristall-Gruppe in der Akzentfarbe des Themas (3 Bilder Glanz) + weicher Schein
  const crys=(ac,f)=>mk('cr'+ac+f,24,28,s=>{const R=Z.ramp(ac),L=[[-4,10,2],[1,15,3],[5,9,2]];
    for(const [dx,h,w0] of L){for(let y=0;y<h;y++){const w=y<2?Math.round(y*w0/2):y>h-3?Math.max(1,w0-1):w0;for(let x=-w;x<=w;x++){let t=x<0?4.6:x===0?3.4:1.8;if(y<2)t+=.8;s.p(12+dx+x,24-h+y,K6(R,t))}}
@@ -22596,7 +22596,7 @@ window.H11=(()=>{
  function townImg(S){const s=new Spr(W*S,H*S);parchment(s);
   for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){const t=map[ty]&&map[ty][tx];const X0=tx*S,Y0=ty*S;
    for(let j=0;j<S;j++)for(let i=0;i<S;i++){const X=X0+i,Y=Y0+j,n=pnoise(X*2,Y*2),d=(by(X,Y)-.5)*.7;let c=null;
-    if(t===5){c=K6(PATH,3+(n-.5)*1.2+d);if(((X>>1)+(Y>>1)*3)%7===0)c=PATH[1]}else if(t===2)c=mixU(K6(GRS,3.2+(n-.5)+d),s.q(X,Y),.35);else if(t===3){c=K6(TRE,2.4+(n-.5)+d)}else if(t===0)c=K6(WAT,2.6+(n-.5)+d);
+    if(t===5){c=K6(PATH,3+(n-.5)*1.2+d);if(((X>>1)+(Y>>1)*3)%7===0)c=PATH[1]}else if(t===2){if(Z.tmapGreen)c=mixU(K6(GRS,3.2+(n-.5)+d),s.q(X,Y),.35);else if(hh(X,Y,41)<.035&&n>.45)c=mixU(GRS[(X+Y)&1?2:3],s.q(X,Y),.35)}else if(t===3){c=K6(TRE,2.4+(n-.5)+d)}else if(t===0)c=K6(WAT,2.6+(n-.5)+d);
     if(c)s.p(X,Y,c)}
    if(t===5){if(map[ty-1]&&map[ty-1][tx]!==5)for(let i=0;i<S;i++)s.p(X0+i,Y0,INK2);if(map[ty+1]&&map[ty+1][tx]!==5)for(let i=0;i<S;i++)s.p(X0+i,Y0+S-1,INK2)}}
   // Gebäude: Grundriss als Dach in der Ladenfarbe (Häuser braun), Lichtkante oben links, Tuschekontur, Schatten rechts unten
@@ -22618,6 +22618,83 @@ window.H11=(()=>{
  let IMAP={};
  {const _im=islandMap;islandMap=function(){if(!use())return _im.apply(this,arguments);try{const M=inTown?ISLMAP:map,sz=inTown?ISLW:W;IMAP={M,sz,S:Math.max(3,Math.floor(300/sz))}}catch(e){return _im.apply(this,arguments)}return hook('i',()=>_im.apply(this,arguments))}}
  {const _tm=townMap;townMap=function(){if(!use()||!inTown)return _tm.apply(this,arguments);return hook('t',()=>_tm.apply(this,arguments))}}
+})();
+// ---------- dev218: Läden der 12 Volksstile (außen, alle 9 Ladentypen, Stufen 0–4) im HD-2D-Stil (nur 👾 + H11; Vergleich: H11.vshopOff) ----------
+// Grundlage ist der Menschen-Laden aus dev212/213 (alle Ladenmerkmale: Esse, Torii, Leuchtturm, Saloon, Bett-Schild, Edelstein, Gilde, Wappen, Schaufenster,
+// Stufen-Schmuck). Dazu kommt der Volksstil aus den vorhandenen Daten (HS[sty]: Material, Wand- und Dachfarben aus shopLook) als Wandmaterial,
+// Dachform/-material und Dekor – passend zu den Volkshäusern aus dev215. Geometrie, Tür, Namensschild und Begehbarkeit sind unverändert.
+(()=>{const Z=H11,{U,UC,mixU,alphaU,hh,ramp,Spr}=Z;if(!Z.WALL||!Z.ROOF)return;
+ const K6=(R,t)=>R[t<0?0:t>5?5:Math.round(t)],R6=a=>a.map(c=>UC(c));
+ const W_=Z.WALL,R_=Z.ROOF;
+ // ---------- Wandmaterialien der Völker ----------
+ W_.coral=(R,x,y,W,Hh,sd)=>{let t=3.2+(x<3?.5:x>W-4?-.7:0)+(hh(x>>1,y>>1,sd)-.5)*.5;const q=hh(x>>2,y>>2,sd+3);if(q>.9)t+=1.1;else if(q<.07)t-=1.2;if(y>Hh-6)t-=.8;return K6(R,t)};
+ W_.cloud=(R,x,y,W,Hh,sd)=>{const puff=Math.sin(x*.35+Math.sin(y*.3)*2)*.5+Math.sin(y*.22+x*.07)*.5;let t=4+puff*.35+(x<3?.4:x>W-4?-.8:0)-(y>Hh-8?.8:0);if(y<2)t=5;return K6(R,t)};
+ W_.dark=(R,x,y,W,Hh,sd)=>{const r=Math.floor(y/5),off=(r%2)*5,lx=(x+off)%10;if(y%5===4||lx===0)return hh(x,r,5)<.3?UC('#b04a1a'):U(16,10,18);let t=2.6+(hh((x+off)/10|0,r,sd)-.5)*.8+(y%5===0?.6:0)-(x>W-3?.7:0);return K6(R,t)};
+ W_.logs=(R,x,y,W,Hh,sd)=>{const ph=8,r=Math.floor(y/ph),ly=y%ph;const e=Math.abs(ly-ph/2+.5)/(ph/2);let t=4-e*2.2+(hh(r,x>>4,sd)-.5)*.5-(x>W-3?.6:0);if(ly===ph-1)t=.8;if(hh(x>>1,r*7,sd+1)<.04)t-=.8;if(x<5||x>W-6){t=4-e*2.6;if((x<2||x>W-3))t-=.6}return K6(R,t)};
+ W_.rough=(R,x,y,W,Hh,sd)=>{const r=Math.floor(y/10),off=hh(r,1,sd)*16|0,cw=12+((hh(r,2,sd)*10)|0),lx=(x+off)%cw,cx=((x+off)/cw)|0;if(y%10===9||lx===0)return K6(R,.8);let t=3+(hh(cx,r,sd)-.5)*1.1+(y%10===0?.8:0)-(lx===cw-1?.7:0)-(x>W-3?.6:0);return K6(R,t)};
+ W_.ghost=(R,x,y,W,Hh,sd)=>{const r=Math.floor(y/4),ly=y%4;if(ly===3)return R[0];let t=2.4+(ly===0?.6:0)+(hh((x+r*5)>>2,r,sd)<.2?-.9:0)-(x>W-3?.6:0);if(hh(x>>3,r,sd+5)<.1)t-=1.2;return K6(R,t)};
+ W_.candy=(R,x,y,W,Hh,sd)=>{const st=((x+y)%14)<4;let t=3.4-(x>W-3?.7:0)+(x<2?.4:0);if(st)return mixU(K6(R,t),U(255,255,255),.55);if(y<5){const drip=y<2+((Math.sin(x*.6)+1)*1.5|0);if(drip)return UC(y<1?'#ffffff':'#fff4fa')}return K6(R,t)};
+ W_.block=(R,x,y,W,Hh,sd)=>{const r=Math.floor(y/8),off=(r%2)*8,lx=(x+off)%16,ly=y%8;let t=3.2;if(ly===0||lx===0)t=4.6;else if(ly===7||lx===15)t=1.6;else if(ly===1||lx===1)t=4;return K6(R,t)};
+ W_.metal=(R,x,y,W,Hh,sd)=>{const lx=x%16;let t=3.2+(Math.abs(lx-5)<2?.6:0)-(x>W-3?.6:0);if(lx===0)t=1.2;else if(lx===1)t=4.4;if((lx===3||lx===13)&&(y%10===3))t=5;if(y<2)t=4.6;return K6(R,t)};
+ W_.mystic=(R,x,y,W,Hh,sd)=>{if(x<4||x>W-5||(x>W/2-2&&x<W/2+2&&false))return K6(R6(['#3a120c','#5a1c12','#7a281a','#9a3a24','#b8543a','#d07a5a']),x<1||x>W-2?1.4:x<2||x>W-3?2.2:3.4);return W_.plaster(R,x,y,W,Hh,sd)};
+ // ---------- Dachmaterialien ----------
+ R_.shell=(R,x,y,W,sd)=>{const rib=(x%8);let t=3+(rib===0?-2:rib===1?1.4:rib<4?.6:-.4)+(x<W*.35?.3:x>W*.7?-.3:0);if(y%10===9)t-=.6;return K6(R,t)};
+ R_.cloud=(R,x,y,W,sd)=>{const p=Math.sin(x*.5+y*.2)*.4+Math.sin(y*.6)*.3;let t=4.2+p-(x>W*.7?.7:0);if(y%7===6&&hh(x>>2,y,sd)<.5)t-=1;return K6(R,t)};
+ R_.mush=(R,x,y,W,sd)=>{const cx=(x+((Math.floor(y/9)%2)*7))%14,cy=y%9;if(Math.hypot(cx-7,cy-4.5)<2.4)return UC(cx<7&&cy<4?'#ffffff':'#f0ece4');return K6(R,3+(x<W*.35?.4:x>W*.7?-.5:0)-(cy>7?.6:0))};
+ R_.candy=(R,x,y,W,sd)=>{if(y<5+Math.round((Math.sin(x*.7)+1)*1.5))return UC(y<2?'#ffffff':'#fff0f6');const sp=hh(x,y,sd+7);if(sp<.025)return UC(['#ff5a8a','#5ad0ff','#ffd24a','#7aff9a'][(x+y)%4]);return K6(R,3.2+(x<W*.35?.3:-.3))};
+ R_.stud=(R,x,y,W,sd)=>{const lx=x%10,ly=y%8;if(Math.hypot(lx-5,ly-3)<2.3)return K6(R,lx<5&&ly<3?4.8:lx>5&&ly>3?1.8:4);if(Math.hypot(lx-5,ly-4.5)<2.5)return R[1];return K6(R,3)};
+ R_.metal=(R,x,y,W,sd)=>{const lx=x%10;let t=lx===0?1.2:lx===1?4.4:3+(Math.abs(lx-4)<2?.5:0);return K6(R,t)};
+ // ---------- Volksstile ----------
+ const ST={
+  fish:{wall:'coral',rmat:'shell',arch:1},mink:{wall:'wood',rmat:'thatch'},sky:{wall:'cloud',rmat:'cloud',gold:1},lunar:{wall:'dark',rmat:'slate',roof:'tower2',warm:1},
+  giant:{wall:'logs',rmat:'thatch',tall:8},tiny:{wall:'plaster',rmat:'mush'},mystic:{wall:'mystic',rmat:'pagoda',roof:'pagoda'},amazon:{wall:'rough',rmat:'thatch'},
+  spooky:{wall:'ghost',rmat:'slate'},whimsy:{wall:'candy',rmat:'candy'},toy:{wall:'block',rmat:'stud'},tech:{wall:'metal',rmat:'metal',roof:'flat'}};
+ const keep=new Set(['none']);
+ Z.folkShopMod=function(sp,b,LK){const sty=LK.sk,S=ST[sty];if(!S)return sp;sp.folk=sty;
+  sp.wall=S.wall;sp.wallC=LK.wall;if(!keep.has(sp.roof)){sp.rmat=S.rmat;sp.roofC=LK.rc;if(S.roof==='pagoda'&&(sp.roof==='gable'||sp.roof==='hip'||sp.roof==='shed'))sp.roof='pagoda';else if(S.roof==='flat'&&sp.roof!=='pagoda'&&sp.roof!=='tower')sp.roof='flat'}
+  if(S.tall)sp.tall=(sp.tall||0)+S.tall;if(S.arch)sp.archDoor=1;if(sty==='spooky')sp.winLit='warm';if(sty==='tech'||sty==='sky')sp.frameC=null;
+  const ex=sp.extra;sp.extra=(s,G)=>{ex&&ex(s,G);try{decor(s,G,sty,LK,b)}catch(e){console.log('h11 vshop',e&&e.message)}};
+  const dy=sp.dyn;sp.dyn=(g2,sx,sy,t,o,bb)=>{dy&&dy(g2,sx,sy,t,o,bb);try{live(g2,sx,sy,t,o,bb,sty)}catch(e){}};return sp};
+ // ---------- Dekor (in den Sprite gebacken) ----------
+ function decor(s,G,sty,LK,b){const {X,Y,W,base:bs,wallTop:wt,roofTop:rt,dcx}=G,noRoof=G.sp.roof==='none',sd=(b.x*7+b.y*3)|0;
+  const P=(x,y,c)=>s.p(X(x),Y(y),c),box=(x,y,w,h,f)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++){const c=f(i,j);if(c)P(x+i,y+j,c)}};
+  const tw=W;
+  if(sty==='fish'){// Korallenäste und Seesterne am Sockel, Bullaugen-Rahmen
+   for(const [x0,col] of [[2,'#f07a8a'],[tw-10,'#ff9a6a']]){const R=ramp(col);for(let k=0;k<3;k++){const bx=x0+k*3,h=6+((k+sd)%3)*2;for(let j=0;j<h;j++)P(bx+((j>>2)%2),bs-4-j,K6(R,3.6-j*.15+(k===1?.6:0)));P(bx+2,bs-4-h+2,K6(R,4.4))}}
+   for(const [x,y] of [[tw-16,bs-6],[10,bs-8]]){const R=ramp('#f8c050');for(const [a,b2] of [[0,-2],[-2,0],[2,0],[-1,2],[1,2],[0,0],[0,-1],[-1,0],[1,0]])P(x+a,y+b2,K6(R,a+b2<0?4.4:3))}}
+  else if(sty==='mink'){// Totempfahl rechts
+   const R=ramp('#a87040');for(let j=0;j<26;j++)for(let i=0;i<5;i++)P(tw-6+i,bs-4-j,K6(R,i===0?4.2:i===4?1.4:3-(j%8===7?1:0)));for(const y of [bs-12,bs-22]){P(tw-5,y,UC('#ffffff'));P(tw-3,y,UC('#ffffff'));P(tw-4,y+2,UC('#c83a2a'))}}
+  else if(sty==='sky'){// Wolken am Sockel, Goldkante unter dem Dach
+   for(const [cx,r] of [[6,6],[tw/2,7],[tw-6,6]])for(let y=-r;y<=0;y++)for(let x=-r*1.6;x<=r*1.6;x++){if((x*x)/(r*r*2.6)+(y*y)/(r*r)>1)continue;P(Math.round(cx+x),bs+y+1,UC(y>-2?'#d8e2ee':(x<0&&y<-r*.5)?'#ffffff':'#f2f6fc'))}
+   const GD=R6(['#7a5418','#b8862a','#e2b648','#fbe7a0','#fff4d0','#ffffff']);for(let x=0;x<tw;x++){P(x,wt,GD[x%6===0?4:3]);P(x,wt+1,GD[1])}}
+  else if(sty==='lunar'&&!noRoof){// Glutfugen-Feuerschale auf dem Dachfirst (Flamme live)
+   const I=Z.IRON;const fx=Math.round(tw/2),fy=(rt!=null?rt:wt-20)-1;for(let i=-4;i<=4;i++){P(fx+i,fy,I[i<0?4:2]);P(fx+i,fy+1,I[1])}for(let j=2;j<6;j++)P(fx,fy+j,I[2])}
+  else if(sty==='giant'){// große Rundschilde links und rechts der Tür
+   for(const [cx,col] of [[14,'#a83a2a'],[tw-14,'#2a5a8a']]){const R=ramp(col);for(let y=-7;y<=7;y++)for(let x=-7;x<=7;x++){const q=Math.hypot(x,y);if(q>7.4)continue;let c=q>6.2?UC('#8a8a92'):K6(R,3.4-(x+y)*.12);if(q<1.6)c=UC('#d0d0d8');P(cx+x,bs-20+y,c)}}}
+  else if(sty==='tiny'){// Blumen und kleine Pilze am Sockel
+   for(let k=0;k<7;k++){const x=3+Math.round(k*(tw-6)/6),c=['#ff6a8a','#ffd24a','#8ac0ff','#ffffff'][k%4];P(x,bs-5,UC('#3a8a3a'));P(x,bs-6,UC('#3a8a3a'));P(x,bs-7,UC(c));P(x-1,bs-7,UC(c));P(x+1,bs-7,UC(c));P(x,bs-8,UC(c));P(x,bs-7,UC('#ffe060'))}}
+  else if(sty==='mystic'){// Lampions (Schein live) an den Ecken
+   for(const lx of [3,tw-8]){const R=ramp('#d8402a');for(let j=0;j<8;j++)for(let i=0;i<6;i++){const e=(j===0||j===7);P(lx+i,wt+6+j,e?UC('#2a1a10'):K6(R,4-Math.abs(i-2.5)*.5-(j>5?.6:0)))}P(lx+2,wt+4,UC('#2a1a10'));P(lx+2,wt+5,UC('#2a1a10'))}}
+  else if(sty==='amazon'){// Ranken über die Wand
+   const L=Z.pal().leaf;for(let k=0;k<4;k++){const x0=4+Math.round(hh(k,sd,3)*(tw-8));let x=x0;const len=12+Math.round(hh(k,sd,4)*18);for(let j=0;j<len;j++){x+=Math.round(Math.sin(j*.5+k)*.6);P(x,wt+2+j,L[2]);if(j%4===1){P(x+1,wt+2+j,L[4]);P(x+2,wt+2+j,L[3])}if(j%4===3){P(x-1,wt+2+j,L[3])}}}}
+  else if(sty==='spooky'){// Spinnennetz oben links, schiefe Bretter
+   const WB=UC('#e8eef0');for(let k=0;k<5;k++){const a=k/4*Math.PI/2;for(let r=0;r<14;r++)P(Math.round(Math.cos(a)*r),wt+Math.round(Math.sin(a)*r),alphaU(WB,170))}for(const r of [5,9,13])for(let k=0;k<=12;k++){const a=k/12*Math.PI/2;P(Math.round(Math.cos(a)*r),wt+Math.round(Math.sin(a)*r),alphaU(WB,140))}
+   const Wd=Z.WOOD;for(let i=0;i<14;i++){P(tw-18+i,bs-14+Math.round(i*.3),Wd[3]);P(tw-18+i,bs-13+Math.round(i*.3),Wd[1])}}
+  else if(sty==='whimsy'){// Streusel auf der Wand
+   for(let k=0;k<40;k++){const x=Math.round(hh(k,sd,7)*(tw-2))+1,y=wt+4+Math.round(hh(k,sd,8)*(bs-wt-12));if(Math.abs(x-dcx)<10&&y>bs-26)continue;P(x,y,UC(['#ff5a8a','#5ad0ff','#ffd24a','#7aff9a','#c08aff'][k%5]));if(k%2)P(x+1,y,UC(['#ff5a8a','#5ad0ff','#ffd24a','#7aff9a','#c08aff'][k%5]))}}
+  else if(sty==='toy'){// Noppen auf der Mauerkrone
+   const R=ramp(LK.wall);for(let x=2;x<tw-2;x+=8){for(let i=0;i<5;i++)for(let j=0;j<3;j++)P(x+i,wt-3+j,K6(R,i===0?4.8:i===4?1.8:j===0?4.4:3.4))}}
+  else if(sty==='tech'){// Antennenmast und Bildschirm (auf dem Dach bzw. an der Fassade)
+   const I=Z.IRON,yT=noRoof?wt:(rt!=null?rt:wt-12);for(let j=0;j<16;j++){P(tw-10,yT-j,I[j%5===0?4:2]);P(tw-9,yT-j,I[1])}for(let i=-3;i<=3;i++)P(tw-10+i,yT-11,I[3]);
+   if(!noRoof&&G.sp.roof==='flat'){for(const lx of [13,25]){P(lx,yT-1,I[1]);P(lx,yT-2,I[2])}box(10,yT-12,18,10,(i,j)=>i===0||j===0||i===17||j===9?(j===0||i===0?I[3]:I[0]):UC(j<3?'#8af4ff':j<6?'#3ab0d0':'#1a6a8a'));P(12,yT-10,UC('#ffffff'))}}}
+ // ---------- live (pro Bild nur kleine Rechtecke) ----------
+ function live(g2,sx,sy,t,o,b,sty){const W=b.w*T;
+  if(sty==='fish'){for(let i=0;i<4;i++){const p=(t*.4+i/4)%1,x=sx+6+i*(W-12)/3+Math.sin(t*2+i)*1.5,y=sy+o.base/2-6-p*22;g2.globalAlpha=.75*(1-p);g2.fillStyle='#e0f8ff';g2.fillRect(Math.round(x*2)/2,Math.round(y*2)/2,1,1);g2.fillStyle='#ffffff';g2.fillRect(Math.round(x*2)/2,Math.round(y*2)/2,.5,.5)}g2.globalAlpha=1}
+  else if(sty==='lunar'&&o.G&&o.G.sp.roof!=='none'){const fx=sx+(W)/2,fy=sy+((o.roofTop!=null?o.roofTop:o.wallTop-20)-o.oy+o.oy-1)/2-o.oy/2+o.oy/2;const y0=sy+(o.roofTop-1)/2;const f=Math.floor(t*10)%3;g2.fillStyle=['#ff9a2a','#ffb03a','#ff7a20'][f];g2.fillRect(fx-1.5,y0-4-(f===1?.5:0),3,3.5);g2.fillStyle='#ffe890';g2.fillRect(fx-.5,y0-3,1,2);try{if(PXW4.dark()>.05)PXW4.ST.lights.push([fx,y0-3,20,'#ff9a40'])}catch(e){}}
+  else if(sty==='mystic'){const p=.5+.5*Math.sin(t*3+b.x);g2.globalAlpha=.25+.2*p;g2.fillStyle='#ffa060';for(const lx of [3,W*2-8]){g2.fillRect(sx+(lx+3)/2-3,sy+(o.wallTop+10)/2-3,6,6)}g2.globalAlpha=1;try{if(PXW4.dark()>.05)for(const lx of [3,W*2-8])PXW4.ST.lights.push([sx+(lx+3)/2,sy+(o.wallTop+10)/2,14,'#ff9a60'])}catch(e){}}
+  else if(sty==='tech'){if(Math.floor(t*2)%2){const nr=o.G&&o.G.sp.roof==='none',x=sx+(W*2-10)/2,y=sy+((nr?o.wallTop:o.roofTop)-15)/2;g2.fillStyle='#ff3a3a';g2.fillRect(x-.5,y-.5,1.5,1.5)}}}
+ // Admin-Knopf
+ {const _am=adminMenu;adminMenu=function(){const r=_am.apply(this,arguments);try{admBtn(`🏪 Volks-Läden: ${Z.vshopOff?'alt (v224)':'neu (dev218)'} – umschalten`,()=>{Z.vshopOff=!Z.vshopOff;adminMenu()})}catch(e){}return r}}
 })();
 
 requestAnimationFrame(loop);
